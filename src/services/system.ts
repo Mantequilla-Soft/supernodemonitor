@@ -30,21 +30,30 @@ export async function getSystemMetrics() {
     const { stdout } = await execAsync(`df -B1 ${config.disk.mountPoint} | tail -1`);
     const parts = stdout.trim().split(/\s+/);
     
-    if (parts.length >= 4) {
+    // df output format: Filesystem 1B-blocks Used Available Use% Mounted-on
+    // parts[0]=filesystem, parts[1]=size, parts[2]=used, parts[3]=available
+    if (parts.length >= 6) {
       const total = parseInt(parts[1]);
       const used = parseInt(parts[2]);
       const available = parseInt(parts[3]);
       
-      diskStats = {
-        path: config.disk.mountPoint,
-        totalTB: (total / (1024 ** 4)).toFixed(1),
-        usedTB: (used / (1024 ** 4)).toFixed(1),
-        freeTB: (available / (1024 ** 4)).toFixed(1),
-        percentUsed: Math.round((used / total) * 100),
-      };
+      if (!isNaN(total) && !isNaN(used) && !isNaN(available)) {
+        diskStats = {
+          path: config.disk.mountPoint,
+          totalTB: (total / (1024 ** 4)).toFixed(1),
+          usedTB: (used / (1024 ** 4)).toFixed(1),
+          freeTB: (available / (1024 ** 4)).toFixed(1),
+          percentUsed: Math.round((used / total) * 100),
+        };
+      } else {
+        throw new Error('Unable to parse disk stats - invalid numbers');
+      }
+    } else {
+      throw new Error(`Unexpected df output format: ${parts.length} parts`);
     }
   } catch (error: any) {
     console.error('Error getting disk stats:', error.message);
+    console.error('df output might be in unexpected format');
     diskStats = {
       path: config.disk.mountPoint,
       error: error.message,

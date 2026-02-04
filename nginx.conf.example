@@ -6,7 +6,7 @@ location /api/node-stats {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Authorization $http_authorization;
     
-    # Rate limiting (optional - requires limit_req_zone in http block)
+    # Rate limiting (requires zone definition: limit_req_zone $binary_remote_addr zone=monitor:10m rate=10r/m; in http block)
     # limit_req zone=monitor burst=5;
     
     # IP restrictions (optional)

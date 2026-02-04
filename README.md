@@ -272,8 +272,8 @@ location /api/node-stats {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Authorization $http_authorization;
     
-    # Optional: Rate limiting
-    limit_req zone=monitor burst=5;
+    # Optional: Rate limiting (requires zone definition in http block)
+    # limit_req zone=monitor burst=5;
     
     # Optional: Restrict to specific IPs
     # allow 192.168.1.0/24;

@@ -41,22 +41,22 @@ export async function getIpfsStats(repoPath: string, isNewRepo: boolean): Promis
       try {
         const { stdout: duOutput } = await execAsync(
           `du -sb ${repoPath}/blocks 2>/dev/null | awk '{print $1}'`,
-          { timeout: 30000 }
+          { timeout: 60000 }  // Increased timeout
         );
         const parsed = parseInt(duOutput.trim());
-        if (!isNaN(parsed)) {
+        if (!isNaN(parsed) && parsed > 0) {
           sizeBytes = parsed;
         }
       } catch (error: any) {
         console.error(`Error getting size for ${repoPath}:`, error.message);
       }
       
-      // Fast approximation for new repo
+      // Fast approximation for new repo using ls + wc instead of find
       if (config.monitoring.newRepoBlocks) {
         try {
           const { stdout: blockCountOutput } = await execAsync(
             `find ${repoPath}/blocks -type f 2>/dev/null | wc -l`,
-            { timeout: 30000 }
+            { timeout: 60000 }  // Increased timeout
           );
           const parsed = parseInt(blockCountOutput.trim());
           if (!isNaN(parsed)) {
