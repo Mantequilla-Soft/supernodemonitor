@@ -40,10 +40,16 @@ export async function getSystemMetrics() {
       let available = parseInt(parts[3]);
       
       if (!isNaN(total) && !isNaN(used) && !isNaN(available) && total > 0) {
+        // Show used space in GB if less than 1 TB, otherwise TB
+        const usedTB = used / (1024 ** 4);
+        const usedDisplay = usedTB < 1 
+          ? { usedGB: (used / (1024 ** 3)).toFixed(1) }
+          : { usedTB: usedTB.toFixed(1) };
+        
         diskStats = {
           path: config.disk.mountPoint,
           totalTB: (total / (1024 ** 4)).toFixed(1),
-          usedTB: (used / (1024 ** 4)).toFixed(1),
+          ...usedDisplay,
           freeTB: (available / (1024 ** 4)).toFixed(1),
           percentUsed: Math.round((used / total) * 100),
         };
