@@ -39,28 +39,49 @@ export async function getIpfsStats(repoPath: string, isNewRepo: boolean): Promis
     // Old repo (81.6TB) will kill the server with these commands
     if (isNewRepo && config.monitoring.newRepoSize) {
       try {
-        const { stdout: duOutput } = await execAsync(
-          `du -sb ${repoPath}/blocks 2>/dev/null | awk '{print $1}'`,
-          { timeout: 60000 }  // Increased timeout
+        // First check if blocks directory exists
+        const { stdout: dirCheck } = await execAsync(
+          `test -d ${repoPath}/blocks && echo "exists" || echo "missing"`,
+          { timeout: 5000 }
         );
-        const parsed = parseInt(duOutput.trim());
-        if (!isNaN(parsed) && parsed > 0) {
-          sizeBytes = parsed;
+        
+        if (dirCheck.trim() === 'exists') {
+          const { stdout: duOutput } = await execAsync(
+            `du -sb ${repoPath}/blocks 2>/dev/null | awk '{print $1}'`,
+            { timeout: 60000 }
+          );
+          const parsed = parseInt(duOutput.trim());
+          if (!isNaN(parsed) && parsed > 0) {
+            sizeBytes = parsed;
+          }
+        } else {
+          console.log(`Blocks directory does not exist: ${repoPath}/blocks`);
         }
       } catch (error: any) {
         console.error(`Error getting size for ${repoPath}:`, error.message);
       }
       
-      // Fast approximation for new repo using ls + wc instead of find
+      // Fast approximation for new repo
       if (config.monitoring.newRepoBlocks) {
         try {
-          const { stdout: blockCountOutput } = await execAsync(
-            `find ${repoPath}/blocks -type f 2>/dev/null | wc -l`,
-            { timeout: 60000 }  // Increased timeout
+          // Check if blocks directory exists first
+          const { stdout: dirCheck } = await execAsync(
+            `test -d ${repoPath}/blocks && echo "exists" || echo "missing"`,
+            { timeout: 5000 }
           );
-          const parsed = parseInt(blockCountOutput.trim());
-          if (!isNaN(parsed)) {
-            blockCount = parsed;
+          
+          if (dirCheck.trim() === 'exists') {
+            const { stdout: blockCountOutput } = await execAsync(
+              `find ${repoPath}/blocks -type f 2>/dev/null | wc -l`,
+              { timeout: 60000 }
+            );
+            const parsed = parseInt(blockCountOutput.trim());
+            if (!isNaN(parsed)) {
+              blockCount = parsed;
+            }
+          } else {
+            console.log(`Blocks directory does not exist: ${repoPath}/blocks`);
+            blockCount = 0;
           }
         } catch (error: any) {
           console.error(`Error getting block count for ${repoPath}:`, error.message);
