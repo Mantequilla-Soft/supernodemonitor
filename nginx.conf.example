@@ -1,0 +1,22 @@
+# Node monitoring service (internal only)
+location /api/node-stats {
+    proxy_pass http://127.0.0.1:3001/api/node-stats;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Authorization $http_authorization;
+    
+    # Rate limiting (optional - requires limit_req_zone in http block)
+    # limit_req zone=monitor burst=5;
+    
+    # IP restrictions (optional)
+    # allow 192.168.1.0/24;  # Your admin network
+    # allow 1.2.3.4;         # Specific admin IP
+    # deny all;
+}
+
+# Health check endpoint (optional - no auth required)
+location /api/node-monitor/health {
+    proxy_pass http://127.0.0.1:3001/health;
+    proxy_set_header Host $host;
+}
