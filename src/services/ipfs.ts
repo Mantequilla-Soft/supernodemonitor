@@ -27,7 +27,7 @@ export async function getIpfsStats(repoPath: string, isNewRepo: boolean): Promis
         `${env} ipfs id 2>/dev/null`,
         { timeout: 5000 }
       );
-      daemonRunning = idOutput && !idOutput.includes('ERROR');
+      daemonRunning = !!idOutput && !idOutput.includes('ERROR');
     } catch (e) {
       daemonRunning = false;
     }
